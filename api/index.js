@@ -17,7 +17,6 @@ function fail(res, code, msg) {
 }
 
 module.exports = async (req, res) => {
-  // Optional diagnostics, only when STATUS_TOKEN is configured.
   if (req.url.startsWith('/__status') && process.env.STATUS_TOKEN) {
     if (req.headers['x-status-token'] !== process.env.STATUS_TOKEN) return fail(res, 404, 'Not found');
     res.setHeader('content-type', 'application/json');

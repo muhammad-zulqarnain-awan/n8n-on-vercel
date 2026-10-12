@@ -1,5 +1,5 @@
 'use strict';
-// Local stand-in for the Vercel runtime: every request goes to api/index.js.
+
 const http = require('node:http');
 const handler = require('../api/index.js');
 const port = Number(process.env.PORT || 3000);
