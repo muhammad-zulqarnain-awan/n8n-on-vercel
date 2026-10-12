@@ -1,0 +1,56 @@
+name: n8n Native Scheduler Engine
+
+on:
+  schedule:
+    # Runs hourly to evaluate and execute scheduled workflows.
+    # To run more frequently (e.g. every 30 minutes), change to: '*/30 * * * *'
+    - cron: '0 * * * *'
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: 'Optional override for the n8n public URL'
+        required: false
+        default: ''
+
+jobs:
+  run-scheduled-workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Scheduler Engine
+        env:
+          URL_INPUT: ${{ github.event.inputs.target_url }}
+          PUBLIC_URL: ${{ secrets.N8N_PUBLIC_URL || vars.N8N_PUBLIC_URL }}
+          ENGINE_SECRET: ${{ secrets.ENGINE_SECRET || secrets.CRON_SECRET }}
+        run: |
+          TARGET="${URL_INPUT:-$PUBLIC_URL}"
+          if [ -z "$TARGET" ]; then
+            echo "❌ Error: N8N_PUBLIC_URL is not set."
+            echo "Please add 'N8N_PUBLIC_URL' in repository Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+          TARGET="${TARGET%/}"
+          echo "📡 Pinging $TARGET/api/engine ..."
+
+          AUTH_HEADER=()
+          if [ -n "$ENGINE_SECRET" ]; then
+            AUTH_HEADER=(-H "Authorization: Bearer $ENGINE_SECRET")
+          fi
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "$TARGET/api/engine" \
+            -H "Content-Type: application/json" \
+            "${AUTH_HEADER[@]}" \
+            --max-time 180)
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "Response HTTP $HTTP_CODE:"
+          echo "$BODY"
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "✅ Engine pulse completed successfully."
+          else
+            echo "❌ Engine pulse failed with status $HTTP_CODE"
+            exit 1
+          fi

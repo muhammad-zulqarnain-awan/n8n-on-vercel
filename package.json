@@ -4,7 +4,13 @@
   "private": true,
   "type": "commonjs",
   "engines": { "node": "24.x" },
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "engine": "node scripts/engine-cli.js",
+    "smoke": "bash scripts/smoke.sh"
+  },
   "dependencies": {
-    "n8n": "2.42.6"
+    "n8n": "2.42.6",
+    "pg": "^8.13.1"
   }
 }

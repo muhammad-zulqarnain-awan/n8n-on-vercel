@@ -17,10 +17,32 @@ function fail(res, code, msg) {
 }
 
 module.exports = async (req, res) => {
-  if (req.url.startsWith('/__status') && process.env.STATUS_TOKEN) {
-    if (req.headers['x-status-token'] !== process.env.STATUS_TOKEN) return fail(res, 404, 'Not found');
+  if (req.url.startsWith('/__status')) {
+    if (!process.env.STATUS_TOKEN || req.headers['x-status-token'] !== process.env.STATUS_TOKEN) {
+      return fail(res, 404, 'Not found');
+    }
     res.setHeader('content-type', 'application/json');
     return res.end(JSON.stringify(sup.status()));
+  }
+
+  if (req.url.startsWith('/api/engine') || req.url.startsWith('/api/cron')) {
+    const secret = process.env.CRON_SECRET || process.env.ENGINE_SECRET;
+    if (secret) {
+      const auth = req.headers['authorization'] || '';
+      const token = auth.startsWith('Bearer ') ? auth.slice(7) : req.headers['x-engine-secret'];
+      if (token !== secret) return fail(res, 401, 'Unauthorized');
+    }
+
+    try {
+      const engine = require('../lib/engine');
+      const result = await engine.runDueWorkflows();
+      res.statusCode = 200;
+      res.setHeader('content-type', 'application/json');
+      return res.end(JSON.stringify(result));
+    } catch (err) {
+      console.error('[engine] runDueWorkflows failed:', err);
+      return fail(res, 500, `Engine error: ${err.message}`);
+    }
   }
 
   sup.begin();
@@ -51,5 +73,16 @@ module.exports = async (req, res) => {
   );
   upstream.on('error', (e) => { console.error('[proxy] upstream error:', e.message); fail(res, 502, 'Bad gateway'); });
   res.on('close', () => upstream.destroy());
-  req.pipe(upstream);
+
+  if (req.body) {
+    const bodyData = Buffer.isBuffer(req.body)
+      ? req.body
+      : typeof req.body === 'string'
+      ? req.body
+      : JSON.stringify(req.body);
+    upstream.write(bodyData);
+    upstream.end();
+  } else {
+    req.pipe(upstream);
+  }
 };

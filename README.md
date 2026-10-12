@@ -25,6 +25,7 @@ This project bridges the gap:
 ## What works
 
 - The n8n editor, login and workflows
+- Native **Schedule Trigger**, **Cron**, and **Interval** nodes (executed by the built-in scheduler engine)
 - Webhooks and **forms** on your own domain
 - Credentials (stored encrypted), the Code node (JavaScript), HTTP Request, and more
 - Your data survives restarts and redeploys
@@ -33,13 +34,13 @@ This project bridges the gap:
 
 | Limitation | Why |
 |---|---|
-| **Schedule / Cron and polling triggers are unreliable** | They need a process that is always running. Vercel Hobby cron is once per day at most. |
+| **Sub-minute real-time polling** | High-frequency polling (e.g. checking Gmail every 30 seconds) requires a 24/7 server. |
 | First request after idle is slow (cold start, roughly 10 to 60 seconds) | n8n has to boot. |
 | Requests larger than about 4.5 MB fail | Vercel's limit. |
 | A single run can last at most 300 seconds | Vercel Hobby's limit. |
 | No community nodes, no Python Code node | They cannot be stored on Vercel's temporary disk. |
 
-If you need schedules or constant traffic, use a normal server instead.
+If you need sub-minute polling or continuous background WebSockets, use a normal persistent server instead.
 
 ## Before you start
 
