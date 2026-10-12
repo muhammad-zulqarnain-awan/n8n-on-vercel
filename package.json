@@ -1,0 +1,10 @@
+{
+  "name": "n8n-on-vercel",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "engines": { "node": "24.x" },
+  "dependencies": {
+    "n8n": "2.42.6"
+  }
+}

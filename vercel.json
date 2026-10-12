@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm ci --no-audit --no-fund",
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 300,
+      "includeFiles": "node_modules/**",
+      "excludeFiles": "node_modules/**/*.{map,md,d.ts}"
+    }
+  },
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }]
+}
