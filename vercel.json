@@ -2,6 +2,12 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "npm ci --no-audit --no-fund",
+  "crons": [
+    {
+      "path": "/api/engine",
+      "schedule": "0 0 * * *"
+    }
+  ],
   "functions": {
     "api/index.js": {
       "maxDuration": 300,
