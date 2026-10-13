@@ -85,7 +85,9 @@ Vercel project > **Settings > Environment Variables** (Production):
 | `N8N_ENCRYPTION_KEY` | the key from step 1 |
 | `N8N_PUBLIC_URL` | your address, for example `https://n8n.yourdomain.com` (no slash at the end) |
 
-Optional: `STATUS_TOKEN` (any random text) turns on a private status page at `/__status`.
+Optional:
+- `ENGINE_SECRET` (or `CRON_SECRET`): Random secret token to secure `/api/engine`. Set this if you use GitHub Actions for hourly scheduling.
+- `STATUS_TOKEN`: Any random text to turn on a private diagnostic page at `/__status`.
 
 ### 6. Add your domain
 
@@ -110,6 +112,22 @@ database and can take up to a minute.
 
 All lines should say `200`. To also test a webhook, add its path:
 `./scripts/smoke.sh https://n8n.yourdomain.com my-webhook-path`
+
+### 9. (Optional) Set up GitHub Actions for hourly / sub-daily schedules
+
+By default, Vercel triggers daily scheduled workflows natively at midnight UTC.
+
+If you have workflows that need to run **hourly or every 30 minutes**, configure the built-in GitHub Action:
+
+1. In your GitHub repository, open **Settings > Secrets and variables > Actions**.
+2. Add the following repository secrets:
+
+| Secret Name | Required? | Example Value | Description |
+|---|---|---|---|
+| `N8N_PUBLIC_URL` | **Yes** | `https://n8n.yourdomain.com` | Your n8n public URL (no trailing slash). |
+| `ENGINE_SECRET` | Optional | `openssl rand -hex 16` | Matches the `ENGINE_SECRET` set in Vercel to protect `/api/engine`. |
+
+3. **Verify it works**: Go to GitHub **Actions** tab > select **n8n Native Scheduler Engine** > click **Run workflow**.
 
 ## Staying inside the free limits
 
