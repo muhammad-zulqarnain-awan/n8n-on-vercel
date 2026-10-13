@@ -15,6 +15,7 @@ on:
 jobs:
   run-scheduled-workflows:
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - name: Trigger Scheduler Engine
         env:
