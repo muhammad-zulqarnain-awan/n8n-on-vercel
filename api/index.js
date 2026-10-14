@@ -50,6 +50,17 @@ module.exports = async (req, res) => {
   const finish = () => { if (!done) { done = true; sup.end(); } };
   res.on('close', finish);
 
+  // Immediately buffer incoming request body so chunks are not lost while n8n is booting
+  const chunks = [];
+  let reqBodyPromise = null;
+  if (!req.body && req.method !== 'GET' && req.method !== 'HEAD') {
+    reqBodyPromise = new Promise((resolve) => {
+      req.on('data', (c) => chunks.push(c));
+      req.on('end', () => resolve(Buffer.concat(chunks)));
+      req.on('error', () => resolve(Buffer.concat(chunks)));
+    });
+  }
+
   try {
     await sup.ensureRunning();
   } catch (e) {
@@ -81,6 +92,10 @@ module.exports = async (req, res) => {
       ? req.body
       : JSON.stringify(req.body);
     upstream.write(bodyData);
+    upstream.end();
+  } else if (reqBodyPromise) {
+    const bodyBuffer = await reqBodyPromise;
+    if (bodyBuffer.length > 0) upstream.write(bodyBuffer);
     upstream.end();
   } else {
     req.pipe(upstream);

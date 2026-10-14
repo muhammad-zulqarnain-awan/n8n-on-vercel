@@ -1,0 +1,49 @@
+name: n8n Keep-Warm Pulse (Optional)
+
+# This workflow keeps your n8n instance and Neon database warm during active working hours
+# to eliminate cold-start latency (<200ms instant response).
+#
+# By default, it is set to manual trigger (workflow_dispatch) so it doesn't consume your
+# free GitHub Actions quota unexpectedly.
+#
+# To enable automated warming during your work hours:
+# Uncomment the 'schedule' block below and adjust the hours/days to your timezone.
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: 'Optional override for the n8n public URL'
+        required: false
+        default: ''
+  # schedule:
+  #   # Runs every 4 minutes, Monday through Friday, 09:00 - 18:00 UTC
+  #   - cron: '*/4 9-18 * * 1-5'
+
+jobs:
+  warm-instance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping n8n readiness endpoint
+        env:
+          URL_INPUT: ${{ github.event.inputs.target_url }}
+          PUBLIC_URL: ${{ secrets.N8N_PUBLIC_URL || vars.N8N_PUBLIC_URL }}
+        run: |
+          TARGET="${URL_INPUT:-$PUBLIC_URL}"
+          if [ -z "$TARGET" ]; then
+            echo "❌ N8N_PUBLIC_URL is not set."
+            echo "Please configure 'N8N_PUBLIC_URL' in repository Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+          TARGET="${TARGET%/}"
+          echo "🔥 Warming $TARGET/healthz/readiness ..."
+
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 "$TARGET/healthz/readiness")
+          echo "Status: HTTP $HTTP_CODE"
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 400 ]; then
+            echo "✅ Instance is warm and ready."
+          else
+            echo "⚠️ Warning: Warmup received status $HTTP_CODE"
+          fi

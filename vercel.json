@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "installCommand": "npm ci --no-audit --no-fund",
+  "installCommand": "npm ci --omit=dev --no-audit --no-fund",
   "crons": [
     {
       "path": "/api/engine",
@@ -12,7 +12,7 @@
     "api/index.js": {
       "maxDuration": 300,
       "includeFiles": "node_modules/**",
-      "excludeFiles": "node_modules/**/*.{map,md,d.ts}"
+      "excludeFiles": "{node_modules/**/*.{map,md,d.ts,ts,LICENSE*,license*,test.*,spec.*},node_modules/**/{test,tests,doc,docs,example,examples,coverage,.github}/**}"
     }
   },
   "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }]
