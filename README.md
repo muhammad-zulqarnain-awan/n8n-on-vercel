@@ -129,6 +129,13 @@ If you have workflows that need to run **hourly or every 30 minutes**, configure
 
 3. **Verify it works**: Go to GitHub **Actions** tab > select **n8n Native Scheduler Engine** > click **Run workflow**.
 
+### 10. (Optional) Eliminate cold starts with Keep-Warm
+
+If you want instant (<200ms) UI loading during your working hours without waiting for cold starts:
+- Open [`.github/workflows/keep-warm.yml`](.github/workflows/keep-warm.yml).
+- Uncomment the `schedule` cron block and adjust the active hours to match your timezone (e.g. 09:00–18:00 UTC, Mon–Fri).
+- At night and on weekends, it automatically stays asleep to preserve your free tier limits.
+
 ## Staying inside the free limits
 
 - Vercel Hobby: 4 CPU-hours and 360 GB-hours per month. Neon Free: 100 compute-hours and 0.5 GB storage.
